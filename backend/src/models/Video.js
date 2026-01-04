@@ -39,7 +39,7 @@ const videoSchema = new mongoose.Schema({
     sensitivityStatus: {
         type: String,
         enum: ['pending', 'safe', 'flagged'],
-        default: 'pending'
+        default: 'safe'
     },
     processingProgress: {
         type: Number,
