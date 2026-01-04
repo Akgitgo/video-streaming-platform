@@ -62,6 +62,18 @@ const AdminPanel = () => {
         }
     };
 
+    const handleDeleteVideo = async (videoId) => {
+        if (window.confirm('Are you sure you want to delete this video?')) {
+            try {
+                await api.delete(`/videos/${videoId}`);
+                fetchData(); // Refresh data
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Failed to delete video');
+            }
+        }
+    };
+
     if (loading) return <div className="text-center">Loading admin panel...</div>;
 
     return (
