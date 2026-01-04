@@ -1,7 +1,18 @@
 const multer = require('multer');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
-const CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
+
+// Try different import methods for CloudinaryStorage (version compatibility)
+let CloudinaryStorage;
+try {
+    CloudinaryStorage = require('multer-storage-cloudinary').CloudinaryStorage;
+} catch (e) {
+    try {
+        CloudinaryStorage = require('multer-storage-cloudinary');
+    } catch (e2) {
+        console.log('CloudinaryStorage not available, will use local storage');
+    }
+}
 
 // Configure Cloudinary only if credentials are provided
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
@@ -12,8 +23,8 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     });
 }
 
-// Use Cloudinary if configured, otherwise use local storage
-const storage = (process.env.CLOUDINARY_CLOUD_NAME)
+// Use Cloudinary if configured and available, otherwise use local storage
+const storage = (process.env.CLOUDINARY_CLOUD_NAME && CloudinaryStorage)
     ? new CloudinaryStorage({
         cloudinary: cloudinary,
         params: {
