@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: video-streaming-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: MAX_FILE_SIZE
+        value: 524288000
+      - key: UPLOAD_PATH
+        value: ./uploads
+      - key: FRONTEND_URL
+        sync: false
