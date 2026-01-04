@@ -85,21 +85,37 @@ const uploadVideo = async (req, res) => {
     const { title, description } = req.body;
 
     try {
-        // Determine path relative to uploads, or full path
-        // Multer saves to 'uploads/' folder in root
+        let videoUrl, thumbnailUrl;
 
-        let thumbnail = '';
-        try {
-            thumbnail = await generateThumbnail(req.file.path, 'uploads/');
-        } catch (thumbErr) {
-            console.error('Thumbnail generation failed:', thumbErr);
+        // Detect storage type based on file path
+        if (req.file.path.startsWith('http')) {
+            // Cloudinary mode - URL is already complete
+            videoUrl = req.file.path;
+            // Generate Cloudinary thumbnail URL from video
+            thumbnailUrl = videoUrl
+                .replace('/upload/', '/upload/w_320,h_240,c_fill/')
+                .replace(/\.(mp4|mov|avi|mkv|webm)$/, '.jpg');
+            console.log('✓ Video uploaded to Cloudinary:', videoUrl);
+        } else {
+            // Local storage mode
+            videoUrl = req.file.path.replace(/\\/g, "/");
+
+            // Generate thumbnail for local storage
+            let thumbnail = '';
+            try {
+                thumbnail = await generateThumbnail(req.file.path, 'uploads/');
+            } catch (thumbErr) {
+                console.error('Thumbnail generation failed:', thumbErr);
+            }
+            thumbnailUrl = thumbnail ? thumbnail.replace(/\\/g, "/") : '';
+            console.log('✓ Video saved locally:', videoUrl);
         }
 
         const video = new Video({
             title,
             description,
-            videoUrl: req.file.path.replace(/\\/g, "/"), // normalize path for windows
-            thumbnailPath: thumbnail ? thumbnail.replace(/\\/g, "/") : '',
+            videoUrl: videoUrl,
+            thumbnailPath: thumbnailUrl,
             uploader: req.user._id
         });
 
@@ -107,7 +123,6 @@ const uploadVideo = async (req, res) => {
 
         // Start processing asynchronously
         const io = req.app.get('io');
-        // Import here or at top (already at top)
         processVideoContent(createdVideo._id, io);
 
         res.status(201).json(createdVideo);
@@ -126,7 +141,23 @@ const streamVideo = async (req, res) => {
             return res.status(404).json({ message: 'Video not found' });
         }
 
-        const videoPath = video.videoUrl;
+        // If video is on Cloudinary, redirect to Cloudinary URL
+        if (video.videoUrl.startsWith('http')) {
+            return res.redirect(video.videoUrl);
+        }
+
+        // Stream local file
+        let videoPath = video.videoUrl;
+        if (!path.isAbsolute(videoPath)) {
+            videoPath = path.join(__dirname, '../../', videoPath);
+        }
+
+        // Check if file exists
+        if (!fs.existsSync(videoPath)) {
+            console.error('Video file not found:', videoPath);
+            return res.status(404).json({ message: 'Video file not found' });
+        }
+
         const stat = fs.statSync(videoPath);
         const fileSize = stat.size;
         const range = req.headers.range;

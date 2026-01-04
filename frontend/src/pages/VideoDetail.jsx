@@ -64,9 +64,22 @@ const VideoDetail = () => {
                     controls
                     autoPlay
                     className="video-element"
-                    poster={video.thumbnailPath ? `http://localhost:5000/${video.thumbnailPath.replace(/\\/g, '/')}` : ''}
+                    poster={
+                        video.thumbnailPath?.startsWith('http')
+                            ? video.thumbnailPath
+                            : video.thumbnailPath
+                                ? `http://localhost:5000/${video.thumbnailPath.replace(/\\/g, '/')}`
+                                : ''
+                    }
                 >
-                    <source src={`/api/videos/stream/${id}`} type="video/mp4" />
+                    <source
+                        src={
+                            video.videoUrl?.startsWith('http')
+                                ? video.videoUrl
+                                : `/api/videos/stream/${id}`
+                        }
+                        type="video/mp4"
+                    />
                     Your browser does not support the video tag.
                 </video>
             </div>

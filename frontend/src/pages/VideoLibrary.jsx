@@ -84,7 +84,11 @@ const VideoLibrary = () => {
                             <div className="thumbnail-container">
                                 {video.thumbnailPath ? (
                                     <img
-                                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}/${video.thumbnailPath.replace(/\\/g, '/')}`}
+                                        src={
+                                            video.thumbnailPath?.startsWith('http')
+                                                ? video.thumbnailPath
+                                                : `http://localhost:5000/${video.thumbnailPath.replace(/\\/g, '/')}`
+                                        }
                                         alt={video.title}
                                         className="thumbnail-image"
                                         onError={(e) => {
