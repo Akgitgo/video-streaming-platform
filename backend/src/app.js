@@ -32,6 +32,25 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Backend is running!' });
+});
+
+// Root route
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Video Streaming Platform API',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            auth: '/api/auth',
+            videos: '/api/videos',
+            admin: '/api/admin'
+        }
+    });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
