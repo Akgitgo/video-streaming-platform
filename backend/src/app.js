@@ -14,16 +14,26 @@ const app = express();
 app.use(helmet({
     crossOriginResourcePolicy: false,
 }));
+
+// Dynamic CORS to handle Vercel preview URLs
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "https://video-streaming-platform-2tpd.vercel.app",
-        "https://video-streaming-platform-2tpd-byi9cm6ew-akgitgos-projects.vercel.app",
-        process.env.FRONTEND_URL
-    ].filter(Boolean),
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "https://video-streaming-platform-2tpd.vercel.app",
+            process.env.FRONTEND_URL
+        ].filter(Boolean);
+
+        // Allow Vercel preview URLs (they follow pattern: *-akgitgos-projects.vercel.app)
+        if (!origin || allowedOrigins.includes(origin) || (origin && origin.includes('vercel.app'))) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(morgan('dev'));
