@@ -112,10 +112,38 @@ const getAllVideos = async (req, res) => {
     }
 };
 
+// @desc    Update video sensitivity status (Admin only)
+// @route   PUT /api/admin/videos/:id/sensitivity
+// @access  Private/Admin
+const updateVideoSensitivity = async (req, res) => {
+    try {
+        const { sensitivityStatus } = req.body;
+
+        if (!['pending', 'safe', 'flagged'].includes(sensitivityStatus)) {
+            return res.status(400).json({ message: 'Invalid sensitivity status' });
+        }
+
+        const video = await Video.findByIdAndUpdate(
+            req.params.id,
+            { sensitivityStatus },
+            { new: true }
+        ).populate('uploader', 'username email role');
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found' });
+        }
+
+        res.json(video);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllUsers,
     updateUserRole,
     deleteUser,
     getSystemStats,
-    getAllVideos
+    getAllVideos,
+    updateVideoSensitivity
 };

@@ -6,7 +6,8 @@ const {
     updateUserRole,
     deleteUser,
     getSystemStats,
-    getAllVideos
+    getAllVideos,
+    updateVideoSensitivity
 } = require('../controllers/adminController');
 
 // All routes require Admin role
@@ -18,5 +19,6 @@ router.get('/users', getAllUsers);
 router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 router.get('/videos', getAllVideos);
+router.put('/videos/:id/sensitivity', updateVideoSensitivity);
 
 module.exports = router;

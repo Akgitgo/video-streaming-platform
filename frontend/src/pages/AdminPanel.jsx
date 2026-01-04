@@ -52,6 +52,16 @@ const AdminPanel = () => {
         }
     };
 
+    const handleSensitivityChange = async (videoId, newStatus) => {
+        try {
+            await api.put(`/admin/videos/${videoId}/sensitivity`, { sensitivityStatus: newStatus });
+            fetchData(); // Refresh data
+        } catch (error) {
+            console.error('Error updating sensitivity:', error);
+            alert('Failed to update video sensitivity');
+        }
+    };
+
     if (loading) return <div className="text-center">Loading admin panel...</div>;
 
     return (
@@ -218,22 +228,39 @@ const AdminPanel = () => {
                                     <td style={{ padding: '1rem' }}>{video.title}</td>
                                     <td style={{ padding: '1rem' }}>{video.uploader?.username || 'Unknown'}</td>
                                     <td style={{ padding: '1rem' }}>
-                                        <span style={{
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '1rem',
-                                            fontSize: '0.875rem',
-                                            background: video.sensitivityStatus === 'safe' ? 'rgba(34, 197, 94, 0.2)' :
-                                                video.sensitivityStatus === 'flagged' ? 'rgba(239, 68, 68, 0.2)' :
-                                                    'rgba(99, 102, 241, 0.2)',
-                                            color: video.sensitivityStatus === 'safe' ? '#22c55e' :
-                                                video.sensitivityStatus === 'flagged' ? '#ef4444' :
-                                                    '#6366f1'
-                                        }}>
-                                            {video.sensitivityStatus}
-                                        </span>
+                                        <select
+                                            value={video.sensitivityStatus}
+                                            onChange={(e) => handleSensitivityChange(video._id, e.target.value)}
+                                            className="form-input"
+                                            style={{
+                                                padding: '0.5rem',
+                                                cursor: 'pointer',
+                                                background: video.sensitivityStatus === 'safe' ? 'rgba(34, 197, 94, 0.2)' :
+                                                    video.sensitivityStatus === 'flagged' ? 'rgba(239, 68, 68, 0.2)' :
+                                                        'rgba(99, 102, 241, 0.2)',
+                                                color: video.sensitivityStatus === 'safe' ? '#22c55e' :
+                                                    video.sensitivityStatus === 'flagged' ? '#ef4444' :
+                                                        '#6366f1',
+                                                border: 'none',
+                                                borderRadius: '0.5rem'
+                                            }}
+                                        >
+                                            <option value="safe">Safe</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="flagged">Flagged</option>
+                                        </select>
                                     </td>
                                     <td style={{ padding: '1rem' }}>{video.views}</td>
                                     <td style={{ padding: '1rem' }}>{new Date(video.createdAt).toLocaleDateString()}</td>
+                                    <td style={{ padding: '1rem' }}>
+                                        <button
+                                            onClick={() => handleDeleteVideo(video._id)}
+                                            className="btn btn-outline"
+                                            style={{ padding: '0.5rem', borderColor: '#ef4444', color: '#ef4444' }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

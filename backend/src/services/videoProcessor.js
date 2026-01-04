@@ -116,8 +116,9 @@ const processVideoContent = async (videoId, io) => {
             });
         }
 
-        // Determine sensitivity randomly (mock)
-        const isFlagged = Math.random() > 0.8; // 20% chance of being flagged
+        // Determine sensitivity (disabled random flagging for production)
+        // All videos are safe by default, admins can manually flag if needed
+        const isFlagged = false; // Changed from: Math.random() > 0.8
         video.sensitivityStatus = isFlagged ? 'flagged' : 'safe';
         video.processingStatus = 'completed';
         await video.save();
