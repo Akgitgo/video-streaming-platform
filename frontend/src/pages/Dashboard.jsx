@@ -105,7 +105,7 @@ const Dashboard = () => {
                                 <div className="thumbnail-container">
                                     {video.thumbnailPath ? (
                                         <img
-                                            src={video.thumbnailPath}
+                                            src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}/${video.thumbnailPath.replace(/\\/g, '/')}`}
                                             alt={video.title}
                                             className="thumbnail-image"
                                             onError={(e) => {

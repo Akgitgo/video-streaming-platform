@@ -85,32 +85,21 @@ const uploadVideo = async (req, res) => {
     const { title, description } = req.body;
 
     try {
-        let videoUrl, thumbnailUrl;
+        // Determine path relative to uploads, or full path
+        // Multer saves to 'uploads/' folder in root
 
-        // Check if using Cloudinary or local storage
-        if (process.env.CLOUDINARY_CLOUD_NAME) {
-            // Cloudinary mode
-            videoUrl = req.file.path; // Cloudinary URL
-            thumbnailUrl = videoUrl.replace('/upload/', '/upload/w_320,h_240,c_fill/').replace(/\.(mp4|mov|avi|mkv|webm)$/, '.jpg');
-        } else {
-            // Local storage mode
-            videoUrl = req.file.path.replace(/\\/g, "/");
-
-            // Generate thumbnail for local storage
-            let thumbnail = '';
-            try {
-                thumbnail = await generateThumbnail(req.file.path, 'uploads/');
-            } catch (thumbErr) {
-                console.error('Thumbnail generation failed:', thumbErr);
-            }
-            thumbnailUrl = thumbnail ? thumbnail.replace(/\\/g, "/") : '';
+        let thumbnail = '';
+        try {
+            thumbnail = await generateThumbnail(req.file.path, 'uploads/');
+        } catch (thumbErr) {
+            console.error('Thumbnail generation failed:', thumbErr);
         }
 
         const video = new Video({
             title,
             description,
-            videoUrl: videoUrl,
-            thumbnailPath: thumbnailUrl,
+            videoUrl: req.file.path.replace(/\\/g, "/"), // normalize path for windows
+            thumbnailPath: thumbnail ? thumbnail.replace(/\\/g, "/") : '',
             uploader: req.user._id
         });
 

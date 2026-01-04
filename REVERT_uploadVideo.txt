@@ -1,0 +1,38 @@
+const uploadVideo = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const { title, description } = req.body;
+
+    try {
+        // Local storage only - simple and working
+        const videoUrl = req.file.path.replace(/\\/g, "/");
+        
+        // Generate thumbnail
+        let thumbnail = '';
+        try {
+            thumbnail = await generateThumbnail(req.file.path, 'uploads/');
+        } catch (thumbErr) {
+            console.error('Thumbnail generation failed:', thumbErr);
+        }
+
+        const video = new Video({
+            title,
+            description,
+            videoUrl: videoUrl,
+            thumbnailPath: thumbnail ? thumbnail.replace(/\\/g, "/") : '',
+            uploader: req.user._id
+        });
+
+        const createdVideo = await video.save();
+
+        // Start processing asynchronously
+        const io = req.app.get('io');
+        processVideoContent(createdVideo._id, io);
+
+        res.status(201).json(createdVideo);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
