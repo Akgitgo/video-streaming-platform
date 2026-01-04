@@ -85,21 +85,19 @@ const uploadVideo = async (req, res) => {
     const { title, description } = req.body;
 
     try {
-        // Determine path relative to uploads, or full path
-        // Multer saves to 'uploads/' folder in root
+        // Cloudinary returns the URL in req.file.path
+        const videoUrl = req.file.path; // Cloudinary URL
+        const publicId = req.file.filename; // Cloudinary public_id
 
-        let thumbnail = '';
-        try {
-            thumbnail = await generateThumbnail(req.file.path, 'uploads/');
-        } catch (thumbErr) {
-            console.error('Thumbnail generation failed:', thumbErr);
-        }
+        // For Cloudinary, we'll generate thumbnail URL from video
+        // Cloudinary can auto-generate thumbnails from videos
+        const thumbnailUrl = videoUrl.replace('/upload/', '/upload/w_320,h_240,c_fill/').replace(/\.(mp4|mov|avi|mkv|webm)$/, '.jpg');
 
         const video = new Video({
             title,
             description,
-            videoUrl: req.file.path.replace(/\\/g, "/"), // normalize path for windows
-            thumbnailPath: thumbnail ? thumbnail.replace(/\\/g, "/") : '',
+            videoUrl: videoUrl, // Cloudinary URL
+            thumbnailPath: thumbnailUrl, // Cloudinary thumbnail URL
             uploader: req.user._id
         });
 
