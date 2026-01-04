@@ -68,7 +68,7 @@ const VideoDetail = () => {
                         video.thumbnailPath?.startsWith('http')
                             ? video.thumbnailPath
                             : video.thumbnailPath
-                                ? `http://localhost:5000/${video.thumbnailPath.replace(/\\/g, '/')}`
+                                ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}/${video.thumbnailPath.replace(/\\/g, '/')}`
                                 : ''
                     }
                 >
