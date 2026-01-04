@@ -15,7 +15,14 @@ app.use(helmet({
     crossOriginResourcePolicy: false,
 }));
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "https://video-streaming-platform-2tpd-byi9cm6ew-akgitgos-projects.vercel.app",
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true
 }));
 app.use(morgan('dev'));
