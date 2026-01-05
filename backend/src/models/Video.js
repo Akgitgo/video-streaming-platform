@@ -56,6 +56,13 @@ const videoSchema = new mongoose.Schema({
 
 videoSchema.virtual('thumbnailUrl').get(function () {
     if (!this.thumbnailPath) return '';
+
+    // If thumbnailPath is already a complete URL (Cloudinary), return as-is
+    if (this.thumbnailPath.startsWith('http://') || this.thumbnailPath.startsWith('https://')) {
+        return this.thumbnailPath;
+    }
+
+    // For local storage, construct the full URL
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
     return `${baseUrl}/${this.thumbnailPath.replace(/\\/g, '/')}`;
 });
