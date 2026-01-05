@@ -1,9 +1,16 @@
 const mongoose = require('mongoose');
 const Video = require('../models/Video');
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 /**
  * Script to re-upload local videos to Cloudinary
