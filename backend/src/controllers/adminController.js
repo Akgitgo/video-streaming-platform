@@ -139,11 +139,84 @@ const updateVideoSensitivity = async (req, res) => {
     }
 };
 
+// @desc    List videos with local file paths (Admin only)
+// @route   GET /api/admin/videos/local
+// @access  Private/Admin
+const listLocalVideos = async (req, res) => {
+    try {
+        const videos = await Video.find({
+            videoUrl: { $not: /^https?:\/\// }
+        }).populate('uploader', 'username email');
+
+        res.json({
+            count: videos.length,
+            videos: videos.map(v => ({
+                _id: v._id,
+                title: v.title,
+                videoUrl: v.videoUrl,
+                thumbnailPath: v.thumbnailPath,
+                uploader: v.uploader,
+                createdAt: v.createdAt,
+                processingStatus: v.processingStatus
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete all videos with local file paths (Admin only)
+// @route   DELETE /api/admin/videos/local
+// @access  Private/Admin
+const deleteLocalVideos = async (req, res) => {
+    try {
+        const result = await Video.deleteMany({
+            videoUrl: { $not: /^https?:\/\// }
+        });
+
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} videos with local file paths`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Migrate a specific video to Cloudinary (Admin only)
+// @route   POST /api/admin/videos/:id/migrate
+// @access  Private/Admin
+const migrateVideoToCloudinary = async (req, res) => {
+    try {
+        const video = await Video.findById(req.params.id);
+
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found' });
+        }
+
+        if (video.videoUrl.startsWith('http')) {
+            return res.status(400).json({ message: 'Video is already on Cloudinary' });
+        }
+
+        res.json({
+            message: 'Migration requires re-uploading the video file. Please use the upload endpoint with the original file.',
+            videoId: video._id,
+            currentPath: video.videoUrl,
+            instruction: 'To migrate this video, you need to re-upload the original video file through the upload endpoint.'
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllUsers,
     updateUserRole,
     deleteUser,
     getSystemStats,
     getAllVideos,
-    updateVideoSensitivity
+    updateVideoSensitivity,
+    listLocalVideos,
+    deleteLocalVideos,
+    migrateVideoToCloudinary
 };

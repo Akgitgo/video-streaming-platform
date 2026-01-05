@@ -7,7 +7,10 @@ const {
     deleteUser,
     getSystemStats,
     getAllVideos,
-    updateVideoSensitivity
+    updateVideoSensitivity,
+    listLocalVideos,
+    deleteLocalVideos,
+    migrateVideoToCloudinary
 } = require('../controllers/adminController');
 
 // All routes require Admin role
@@ -20,5 +23,10 @@ router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 router.get('/videos', getAllVideos);
 router.put('/videos/:id/sensitivity', updateVideoSensitivity);
+
+// Video migration routes
+router.get('/videos/local', listLocalVideos);
+router.delete('/videos/local', deleteLocalVideos);
+router.post('/videos/:id/migrate', migrateVideoToCloudinary);
 
 module.exports = router;

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Users, Video, Eye, Shield, TrendingUp, Edit2, Trash2 } from 'lucide-react';
+import { Users, Video, Eye, Shield, TrendingUp, Edit2, Trash2, Database, AlertTriangle } from 'lucide-react';
 
 const AdminPanel = () => {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [videos, setVideos] = useState([]);
+    const [localVideos, setLocalVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('stats');
+    const [migrationLoading, setMigrationLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -74,6 +76,36 @@ const AdminPanel = () => {
         }
     };
 
+    const fetchLocalVideos = async () => {
+        setMigrationLoading(true);
+        try {
+            const res = await api.get('/admin/videos/local');
+            setLocalVideos(res.data.videos || []);
+        } catch (error) {
+            console.error('Error fetching local videos:', error);
+            alert('Failed to fetch local videos');
+        } finally {
+            setMigrationLoading(false);
+        }
+    };
+
+    const handleDeleteLocalVideos = async () => {
+        if (window.confirm('⚠️ WARNING: This will permanently delete ALL videos with local file paths from the database. Are you sure?')) {
+            setMigrationLoading(true);
+            try {
+                const res = await api.delete('/admin/videos/local');
+                alert(res.data.message);
+                fetchLocalVideos(); // Refresh local videos list
+                fetchData(); // Refresh all data
+            } catch (error) {
+                console.error('Error deleting local videos:', error);
+                alert('Failed to delete local videos');
+            } finally {
+                setMigrationLoading(false);
+            }
+        }
+    };
+
     if (loading) return <div className="text-center">Loading admin panel...</div>;
 
     return (
@@ -123,6 +155,23 @@ const AdminPanel = () => {
                     }}
                 >
                     Videos
+                </button>
+                <button
+                    onClick={() => {
+                        setActiveTab('migration');
+                        fetchLocalVideos();
+                    }}
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        background: 'none',
+                        border: 'none',
+                        color: activeTab === 'migration' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                        borderBottom: activeTab === 'migration' ? '2px solid var(--primary-color)' : 'none',
+                        cursor: 'pointer',
+                        fontWeight: activeTab === 'migration' ? 'bold' : 'normal'
+                    }}
+                >
+                    Migration
                 </button>
             </div>
 
@@ -218,6 +267,117 @@ const AdminPanel = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* Migration Tab */}
+            {activeTab === 'migration' && (
+                <div>
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid #ef4444',
+                        borderRadius: '0.5rem',
+                        padding: '1rem',
+                        marginBottom: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'start',
+                        gap: '0.75rem'
+                    }}>
+                        <AlertTriangle size={24} color="#ef4444" />
+                        <div>
+                            <h3 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>Video Migration Tool</h3>
+                            <p style={{ color: '#ef4444', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                                This tool helps you manage videos with local file paths that are not accessible in production.
+                                These videos were uploaded before Cloudinary integration and need to be re-uploaded or deleted.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <button
+                            onClick={fetchLocalVideos}
+                            className="btn btn-primary"
+                            disabled={migrationLoading}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                            <Database size={16} />
+                            {migrationLoading ? 'Loading...' : 'Refresh List'}
+                        </button>
+                        {localVideos.length > 0 && (
+                            <button
+                                onClick={handleDeleteLocalVideos}
+                                className="btn btn-outline"
+                                disabled={migrationLoading}
+                                style={{
+                                    borderColor: '#ef4444',
+                                    color: '#ef4444',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}
+                            >
+                                <Trash2 size={16} />
+                                Delete All Local Videos ({localVideos.length})
+                            </button>
+                        )}
+                    </div>
+
+                    {migrationLoading ? (
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+                    ) : localVideos.length === 0 ? (
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '3rem',
+                            background: 'var(--surface-dark)',
+                            borderRadius: '1rem',
+                            border: '1px solid var(--border-color)'
+                        }}>
+                            <Database size={48} color="var(--text-secondary)" style={{ margin: '0 auto 1rem' }} />
+                            <h3 style={{ marginBottom: '0.5rem' }}>No Local Videos Found</h3>
+                            <p style={{ color: 'var(--text-secondary)' }}>All videos are using cloud storage!</p>
+                        </div>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Title</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Video Path</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Thumbnail Path</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Uploader</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Created</th>
+                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {localVideos.map(video => (
+                                        <tr key={video._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                            <td style={{ padding: '1rem' }}>{video.title}</td>
+                                            <td style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                {video.videoUrl}
+                                            </td>
+                                            <td style={{ padding: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                {video.thumbnailPath || 'N/A'}
+                                            </td>
+                                            <td style={{ padding: '1rem' }}>{video.uploader?.username || 'Unknown'}</td>
+                                            <td style={{ padding: '1rem' }}>{new Date(video.createdAt).toLocaleDateString()}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <span style={{
+                                                    padding: '0.25rem 0.75rem',
+                                                    borderRadius: '0.5rem',
+                                                    background: 'rgba(239, 68, 68, 0.2)',
+                                                    color: '#ef4444',
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    Local File
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             )}
 
